@@ -24,7 +24,7 @@ const req = async (method, path, body, token, isForm = false) => {
     return data;
   } catch (err) {
     if (err instanceof TypeError && /fetch/i.test(err.message)) {
-      throw new Error("Cannot reach server. Check backend is running on http://localhost:5000 and CORS settings.");
+      throw new Error("Cannot reach server. Please try again.");
     }
     throw err;
   }
