@@ -623,7 +623,56 @@ textarea.form-input {
 .empty-state-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
 .empty-state-sub   { font-size: 14px; }
 
-/* ── Schedule Upload Area ── */
+/* ── Settings Guide ── */
+.settings-guide {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.settings-guide-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.settings-step {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+  align-items: flex-start;
+}
+.settings-step:last-child { margin-bottom: 0; }
+.settings-step-num {
+  width: 28px; height: 28px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.settings-step-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.settings-step-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+.settings-step-desc a { color: var(--primary); text-decoration: none; font-weight: 600; }
+.settings-step-desc a:hover { text-decoration: underline; }
+.settings-step-desc code { background: #e8f0fe; color: var(--primary); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+.settings-step-list { margin: 6px 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
+.settings-step-list li { font-size: 13px; color: var(--text-muted); }
+.settings-copy-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+.settings-copy-box code { background: none; padding: 0; font-size: 12px; color: var(--text); word-break: break-all; flex: 1; }
 .schedule-upload-area {
   display: flex;
   flex-direction: column;

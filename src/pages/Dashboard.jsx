@@ -866,13 +866,67 @@ export default function Dashboard() {
               <div className="card-title">🔑 API Credentials</div>
               <div className="card-sub">Each user has their own isolated keys — never shared</div>
 
+              {/* Step by step guide */}
+              <div className="settings-guide">
+                <div className="settings-guide-title">📖 How to get your credentials</div>
+
+                <div className="settings-step">
+                  <div className="settings-step-num">1</div>
+                  <div>
+                    <div className="settings-step-title">Groq API Key</div>
+                    <div className="settings-step-desc">
+                      Go to <a href="https://console.groq.com" target="_blank" rel="noreferrer">console.groq.com</a> → Sign up → Click <strong>API Keys</strong> → <strong>Create API Key</strong> → Copy the key starting with <code>gsk_...</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-step">
+                  <div className="settings-step-num">2</div>
+                  <div>
+                    <div className="settings-step-title">LinkedIn Client ID &amp; Secret</div>
+                    <div className="settings-step-desc">
+                      Go to <a href="https://www.linkedin.com/developers/apps" target="_blank" rel="noreferrer">linkedin.com/developers/apps</a> → <strong>Create App</strong> → Fill name &amp; logo → Go to <strong>Auth</strong> tab → Copy <strong>Client ID</strong> and <strong>Client Secret</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-step">
+                  <div className="settings-step-num">3</div>
+                  <div>
+                    <div className="settings-step-title">LinkedIn Redirect URI</div>
+                    <div className="settings-step-desc">
+                      In your LinkedIn App → <strong>Auth</strong> tab → <strong>OAuth 2.0 settings</strong> → Add this exact URL as redirect URI:
+                      <div className="settings-copy-box">
+                        <code>https://linkedin-agent-client-git-main-anands-projects-d6093bf1.vercel.app/auth/linkedin/callback</code>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => { navigator.clipboard.writeText("https://linkedin-agent-client-git-main-anands-projects-d6093bf1.vercel.app/auth/linkedin/callback"); setStatus({ type: "success", msg: "✅ Redirect URI copied!" }); }}>Copy</button>
+                      </div>
+                      Then paste the same URL in the field below.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-step">
+                  <div className="settings-step-num">4</div>
+                  <div>
+                    <div className="settings-step-title">LinkedIn App Permissions</div>
+                    <div className="settings-step-desc">
+                      In your LinkedIn App → <strong>Products</strong> tab → Request access to:
+                      <ul className="settings-step-list">
+                        <li>✅ <strong>Sign In with LinkedIn using OpenID Connect</strong></li>
+                        <li>✅ <strong>Share on LinkedIn</strong> (gives <code>w_member_social</code>)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <form onSubmit={saveCreds}>
                 <div className="creds-grid">
                   {[
-                    ["groqApiKey",            "Groq API Key",           "gsk_...",                                          true ],
-                    ["linkedinClientId",      "LinkedIn Client ID",     "86xxx...",                                         false],
-                    ["linkedinClientSecret",  "LinkedIn Client Secret", "WPL_...",                                          true ],
-                    ["linkedinRedirectUri",   "LinkedIn Redirect URI",  "http://localhost:5000/auth/linkedin/callback",     false],
+                    ["groqApiKey",           "Groq API Key",          "gsk_...",                                                                                                                          true ],
+                    ["linkedinClientId",     "LinkedIn Client ID",    "86xxx...",                                                                                                                         false],
+                    ["linkedinClientSecret", "LinkedIn Client Secret", "WPL_...",                                                                                                                        true ],
+                    ["linkedinRedirectUri",  "LinkedIn Redirect URI", "https://linkedin-agent-client-git-main-anands-projects-d6093bf1.vercel.app/auth/linkedin/callback", false],
                   ].map(([key, label, ph, secret]) => (
                     <div className="form-group" key={key}>
                       <label className="form-label">
@@ -891,7 +945,6 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-
                 <button className="btn btn-primary" disabled={savingCreds} style={{ marginTop: 8 }}>
                   {savingCreds ? <><span className="spinner" /> Saving...</> : "💾 Save Credentials"}
                 </button>
