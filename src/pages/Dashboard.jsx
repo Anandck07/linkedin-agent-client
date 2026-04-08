@@ -918,6 +918,16 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
+
+                <div className="settings-step">
+                  <div className="settings-step-num">5</div>
+                  <div>
+                    <div className="settings-step-title">LinkedIn Connection</div>
+                    <div className="settings-step-desc">
+                      After saving all credentials above → scroll down to the <strong>LinkedIn Connection</strong> section below → click <strong>Connect →</strong> button → login with your LinkedIn account → allow permissions → you will be redirected back and see <strong>✅ Connected</strong>.
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <form onSubmit={saveCreds}>
