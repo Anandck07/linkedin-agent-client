@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
+import LinkedInCallback from "./pages/LinkedInCallback";
 import { useAuth } from "./AuthContext";
 
 export default function App() {
@@ -9,6 +10,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={token ? <Navigate to="/dashboard" /> : <AuthPage />} />
       <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/" />} />
+      <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
     </Routes>
   );
 }
