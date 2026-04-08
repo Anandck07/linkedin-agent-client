@@ -33,6 +33,8 @@ const req = async (method, path, body, token, isForm = false) => {
 export const api = {
   register: (body) => req("POST", "/auth/register", body),
   login: (body) => req("POST", "/auth/login", body),
+  forgotPassword: (email) => req("POST", "/auth/forgot-password", { email }),
+  resetPassword: (token, password) => req("POST", "/auth/reset-password", { token, password }),
   getMe: (token) => req("GET", "/dashboard/me", null, token),
   saveCredentials: (body, token) => req("POST", "/dashboard/credentials", body, token),
   generate: (topic, token) => req("POST", "/dashboard/generate", { topic }, token),

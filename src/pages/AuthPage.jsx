@@ -8,6 +8,11 @@ export default function AuthPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMsg, setForgotMsg] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -25,6 +30,20 @@ export default function AuthPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendReset = async (e) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotMsg("");
+    try {
+      const data = await api.forgotPassword(forgotEmail);
+      setForgotMsg(data.message);
+    } catch (err) {
+      setForgotMsg(err.message);
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -75,7 +94,34 @@ export default function AuthPage() {
             </div>
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input className="form-input" placeholder="••••••••" type="password" value={form.password} onChange={f("password")} required />
+              <div style={{ position: "relative" }}>
+                <input
+                  className="form-input"
+                  placeholder="••••••••"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={f("password")}
+                  style={{ paddingRight: 40 }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "var(--text-muted)", padding: 0 }}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
+              {isLogin && (
+                <div style={{ textAlign: "right", marginTop: 6 }}>
+                  <span
+                    style={{ fontSize: 13, color: "var(--primary)", cursor: "pointer", fontWeight: 500 }}
+                    onClick={() => { setForgotOpen(true); setForgotMsg(""); setForgotEmail(""); }}
+                  >
+                    Forgot password?
+                  </span>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -100,6 +146,40 @@ export default function AuthPage() {
               {isLogin ? "Register for free" : "Sign in"}
             </span>
           </p>
+
+      {/* Forgot Password Modal */}
+      {forgotOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "var(--card-bg, #fff)", borderRadius: 12, padding: 32, width: 360, boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
+            <h3 style={{ marginBottom: 8 }}>Reset Password</h3>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>Enter your email and we'll send a reset link.</p>
+            <form onSubmit={sendReset}>
+              <input
+                className="form-input"
+                type="email"
+                placeholder="you@example.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+                style={{ marginBottom: 12 }}
+              />
+              {forgotMsg && <p style={{ fontSize: 13, color: "var(--primary)", marginBottom: 12 }}>{forgotMsg}</p>}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn btn-primary" disabled={forgotLoading} style={{ flex: 1 }}>
+                  {forgotLoading ? "Sending..." : "Send Reset Link"}
+                </button>
+                <button type="button" className="btn" onClick={() => setForgotOpen(false)} style={{ flex: 1 }}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+          <div className="divider" />
+          <a href="https://github.com/Anandck07/linkedin-agent-server" target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 13, color: "var(--text-muted)", textDecoration: "none" }}>
+            <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            View on GitHub
+          </a>
         </div>
       </div>
     </div>
