@@ -38,9 +38,9 @@ export default function LinkedInCallback() {
         setStatus("✅ LinkedIn connected!");
         setTimeout(() => navigate("/dashboard?linkedin=connected"), 1000);
       })
-      .catch(() => {
-        setStatus("❌ Failed to connect LinkedIn.");
-        setTimeout(() => navigate("/dashboard?linkedin=error"), 2000);
+      .catch((err) => {
+        setStatus(`❌ ${err.message || "Failed to connect LinkedIn."}`);
+        setTimeout(() => navigate("/dashboard?linkedin=error"), 4000);
       });
   }, []);
 
