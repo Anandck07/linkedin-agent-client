@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE = "https://linkedin-agent-server-production.up.railway.app/api";
 
 const headers = (token, isForm = false) => ({
   ...(!isForm && { "Content-Type": "application/json" }),
