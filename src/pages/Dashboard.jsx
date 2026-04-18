@@ -9,7 +9,6 @@ const NAV = [
   { id: "schedule", icon: "⏰", label: "Schedule"  },
   { id: "history",  icon: "📋", label: "History"  },
   { id: "settings", icon: "⚙️", label: "Settings"  },
-  { id: "billing",  icon: "💳", label: "Upgrade"   },
 ];
 
 export default function Dashboard() {
@@ -389,20 +388,6 @@ export default function Dashboard() {
         </nav>
 
         <div className="sidebar-footer">
-          {me?.plan === "free" && (
-            <div style={{ marginBottom: 12, padding: "10px 12px", background: "var(--bg)", borderRadius: 8, border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
-                <span>Free plan</span>
-                <span>{me?.postsThisMonth ?? 0} / 5 posts</span>
-              </div>
-              <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${Math.min(((me?.postsThisMonth ?? 0) / 5) * 100, 100)}%`, background: "var(--primary)", borderRadius: 99, transition: "width 0.3s" }} />
-              </div>
-              <button className="btn btn-primary btn-full btn-sm" style={{ marginTop: 10 }} onClick={() => setTab("billing")}>
-                ⬆️ Upgrade Plan
-              </button>
-            </div>
-          )}
           <button className="btn btn-danger btn-full btn-sm" onClick={() => { logout(); navigate("/"); }}>
             ↩ Sign Out
           </button>
