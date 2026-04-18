@@ -9,6 +9,7 @@ const NAV = [
   { id: "schedule", icon: "⏰", label: "Schedule"  },
   { id: "history",  icon: "📋", label: "History"  },
   { id: "settings", icon: "⚙️", label: "Settings"  },
+  { id: "billing",  icon: "💳", label: "Upgrade"   },
 ];
 
 export default function Dashboard() {
@@ -40,9 +41,15 @@ export default function Dashboard() {
   const [generatingPromptText, setGeneratingPromptText] = useState(false);
   const [expandedPosts, setExpandedPosts] = useState({});
   const [uploadingImageFor, setUploadingImageFor] = useState(null);
+  const [plans, setPlans] = useState([]);
+  const [billingLoading, setBillingLoading] = useState(null);
 
   const loadMe = useCallback(async () => {
-    try { setMe(await api.getMe(token)); }
+    try {
+      const meData = await api.getMe(token);
+      setMe(meData);
+      if (!plans.length) api.getPlans().then((d) => setPlans(d.plans)).catch(() => {});
+    }
     catch { logout(); navigate("/"); }
   }, [token, logout, navigate]);
 
@@ -57,6 +64,16 @@ export default function Dashboard() {
     }
     if (params.get("linkedin") === "error") {
       setStatus({ type: "error", msg: "❌ LinkedIn connection failed. Please try again." });
+      window.history.replaceState({}, "", "/dashboard");
+    }
+    if (params.get("upgrade") === "success") {
+      setStatus({ type: "success", msg: "🎉 Upgrade successful! Your plan has been updated." });
+      setTab("billing");
+      window.history.replaceState({}, "", "/dashboard");
+      loadMe();
+    }
+    if (params.get("upgrade") === "cancelled") {
+      setStatus({ type: "error", msg: "Upgrade cancelled." });
       window.history.replaceState({}, "", "/dashboard");
     }
   }, [token, navigate, loadMe]);
@@ -325,10 +342,20 @@ export default function Dashboard() {
         </nav>
 
         <div className="sidebar-footer">
-          <a href="https://github.com/Anandck07/linkedin-agent-server" target="_blank" rel="noreferrer" className="btn btn-ghost btn-full btn-sm" style={{ marginBottom: 8, textDecoration: "none" }}>
-            <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            GitHub
-          </a>
+          {me?.plan === "free" && (
+            <div style={{ marginBottom: 12, padding: "10px 12px", background: "var(--bg)", borderRadius: 8, border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+                <span>Free plan</span>
+                <span>{me?.postsThisMonth ?? 0} / 5 posts</span>
+              </div>
+              <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${Math.min(((me?.postsThisMonth ?? 0) / 5) * 100, 100)}%`, background: "var(--primary)", borderRadius: 99, transition: "width 0.3s" }} />
+              </div>
+              <button className="btn btn-primary btn-full btn-sm" style={{ marginTop: 10 }} onClick={() => setTab("billing")}>
+                ⬆️ Upgrade Plan
+              </button>
+            </div>
+          )}
           <button className="btn btn-danger btn-full btn-sm" onClick={() => { logout(); navigate("/"); }}>
             ↩ Sign Out
           </button>
@@ -998,6 +1025,86 @@ export default function Dashboard() {
                   ⚠️ Save your LinkedIn credentials above before connecting.
                 </div>
               )}
+            </div>
+          </div>
+        )}
+        {/* Billing Tab */}
+        {tab === "billing" && (
+          <div className="fade-in">
+            <div className="page-header">
+              <div className="page-title">💳 Plans & Billing</div>
+              <div className="page-sub">You are on the <strong>{me?.plan || "free"}</strong> plan · {me?.postsThisMonth ?? 0} posts used this month</div>
+            </div>
+
+            <div className="card" style={{ marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>Current Plan: <span style={{ color: "var(--primary)", textTransform: "capitalize" }}>{me?.plan || "free"}</span></div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+                  {me?.plan === "free" ? `${me?.postsThisMonth ?? 0} / 5 posts used this month` : "Unlimited posts & scheduling"}
+                </div>
+              </div>
+              {me?.plan !== "free" && (
+                <button className="btn btn-ghost btn-sm" onClick={async () => {
+                  try { const d = await api.billingPortal(token); window.location.href = d.url; }
+                  catch (err) { setStatus({ type: "error", msg: err.message }); }
+                }}>Manage Subscription →</button>
+              )}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
+              {plans.map((plan) => (
+                <div key={plan.id} style={{
+                  background: plan.id === "pro" ? "var(--primary)" : "#fff",
+                  color: plan.id === "pro" ? "#fff" : "var(--text)",
+                  border: `2px solid ${plan.id === "pro" ? "var(--primary)" : "var(--border)"}`,
+                  borderRadius: 16, padding: "28px 24px", position: "relative",
+                  boxShadow: plan.id === "pro" ? "0 8px 32px rgba(10,102,194,0.25)" : "var(--shadow-sm)",
+                  transform: plan.id === "pro" ? "scale(1.03)" : "none",
+                }}>
+                  {plan.id === "pro" && (
+                    <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: "#f59e0b", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 14px", borderRadius: 99 }}>POPULAR</div>
+                  )}
+                  <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>{plan.name}</div>
+                  <div style={{ fontSize: 36, fontWeight: 800, marginBottom: 4 }}>
+                    ${plan.price}<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.7 }}>/mo</span>
+                  </div>
+                  <div style={{ height: 1, background: plan.id === "pro" ? "rgba(255,255,255,0.2)" : "var(--border)", margin: "16px 0" }} />
+                  <ul style={{ listStyle: "none", padding: 0, marginBottom: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+                    {plan.features.map((f) => (
+                      <li key={f} style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ color: plan.id === "pro" ? "#86efac" : "var(--green)", fontWeight: 700 }}>✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    disabled={me?.plan === plan.id || plan.id === "free" || billingLoading === plan.id}
+                    onClick={async () => {
+                      if (!plan.priceId) return;
+                      setBillingLoading(plan.id);
+                      try {
+                        const d = await api.checkout(plan.priceId, token);
+                        window.location.href = d.url;
+                      } catch (err) {
+                        setStatus({ type: "error", msg: err.message });
+                      } finally { setBillingLoading(null); }
+                    }}
+                    style={{
+                      width: "100%", padding: "11px", borderRadius: 8, border: "none",
+                      fontWeight: 700, fontSize: 14,
+                      cursor: me?.plan === plan.id || plan.id === "free" ? "default" : "pointer",
+                      background: plan.id === "pro" ? "#fff" : plan.id === "free" ? "var(--bg)" : "var(--primary)",
+                      color: plan.id === "pro" ? "var(--primary)" : plan.id === "free" ? "var(--text-muted)" : "#fff",
+                      opacity: me?.plan === plan.id || plan.id === "free" ? 0.6 : 1,
+                      fontFamily: "var(--font)",
+                    }}
+                  >
+                    {billingLoading === plan.id ? "Redirecting..." :
+                     me?.plan === plan.id ? "✅ Current Plan" :
+                     plan.id === "free" ? "Free Plan" :
+                     `Upgrade to ${plan.name} →`}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}
