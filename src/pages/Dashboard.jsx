@@ -44,6 +44,53 @@ export default function Dashboard() {
   const [plans, setPlans] = useState([]);
   const [billingLoading, setBillingLoading] = useState(null);
 
+  const loadRazorpay = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) return resolve(true);
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.body.appendChild(s);
+    });
+
+  const handleUpgrade = async (plan) => {
+    if (!plan.planId) return;
+    setBillingLoading(plan.id);
+    try {
+      const ok = await loadRazorpay();
+      if (!ok) throw new Error("Failed to load Razorpay.");
+      const data = await api.checkout(plan.planId, token);
+      const options = {
+        key: data.keyId,
+        subscription_id: data.subscriptionId,
+        name: "LinkedIn AI Agent",
+        description: `${plan.name} Plan - ₹${plan.price}/month`,
+        prefill: { name: data.name, email: data.email },
+        theme: { color: "#0a66c2" },
+        handler: async (response) => {
+          try {
+            await api.verifyPayment({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature,
+              planType: plan.id,
+            }, token);
+            setStatus({ type: "success", msg: "🎉 Upgrade successful!" });
+            loadMe();
+          } catch (err) {
+            setStatus({ type: "error", msg: err.message });
+          }
+        },
+      };
+      new window.Razorpay(options).open();
+    } catch (err) {
+      setStatus({ type: "error", msg: err.message });
+    } finally {
+      setBillingLoading(null);
+    }
+  };
+
   const loadMe = useCallback(async () => {
     try {
       const meData = await api.getMe(token);
@@ -1045,9 +1092,13 @@ export default function Dashboard() {
               </div>
               {me?.plan !== "free" && (
                 <button className="btn btn-ghost btn-sm" onClick={async () => {
-                  try { const d = await api.billingPortal(token); window.location.href = d.url; }
-                  catch (err) { setStatus({ type: "error", msg: err.message }); }
-                }}>Manage Subscription →</button>
+                  if (!confirm("Cancel your subscription? You'll be downgraded to Free.")) return;
+                  try {
+                    await api.cancelSubscription(token);
+                    setStatus({ type: "success", msg: "Subscription cancelled. You are now on Free plan." });
+                    loadMe();
+                  } catch (err) { setStatus({ type: "error", msg: err.message }); }
+                }}>Cancel Subscription</button>
               )}
             </div>
 
@@ -1066,7 +1117,7 @@ export default function Dashboard() {
                   )}
                   <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>{plan.name}</div>
                   <div style={{ fontSize: 36, fontWeight: 800, marginBottom: 4 }}>
-                    ${plan.price}<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.7 }}>/mo</span>
+                    ₹{plan.price}<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.7 }}>/mo</span>
                   </div>
                   <div style={{ height: 1, background: plan.id === "pro" ? "rgba(255,255,255,0.2)" : "var(--border)", margin: "16px 0" }} />
                   <ul style={{ listStyle: "none", padding: 0, marginBottom: 24, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1078,16 +1129,7 @@ export default function Dashboard() {
                   </ul>
                   <button
                     disabled={me?.plan === plan.id || plan.id === "free" || billingLoading === plan.id}
-                    onClick={async () => {
-                      if (!plan.priceId) return;
-                      setBillingLoading(plan.id);
-                      try {
-                        const d = await api.checkout(plan.priceId, token);
-                        window.location.href = d.url;
-                      } catch (err) {
-                        setStatus({ type: "error", msg: err.message });
-                      } finally { setBillingLoading(null); }
-                    }}
+                    onClick={() => handleUpgrade(plan)}
                     style={{
                       width: "100%", padding: "11px", borderRadius: 8, border: "none",
                       fontWeight: 700, fontSize: 14,
