@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../AuthContext";
@@ -22,6 +22,10 @@ export default function Dashboard() {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [bestTime, setBestTime] = useState(null);
+  const [fetchingBestTime, setFetchingBestTime] = useState(false);
+  const [expandedDay, setExpandedDay] = useState(null);
+  const hasFetchedInitialBestTime = useRef(false);
   const [publishing, setPublishing] = useState(false);
   const [status, setStatus] = useState(null); // { type, msg }
   const [creds, setCreds] = useState({
@@ -124,6 +128,23 @@ export default function Dashboard() {
     }
   }, [token, navigate, loadMe]);
 
+  useEffect(() => {
+    const fetchInitial = async () => {
+      if (!me?.hasCredentials || hasFetchedInitialBestTime.current || bestTime) return;
+      hasFetchedInitialBestTime.current = true;
+      setFetchingBestTime(true);
+      try {
+        const data = await api.getBestTime("general professional network", token);
+        setBestTime(data.bestTime);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setFetchingBestTime(false);
+      }
+    };
+    fetchInitial();
+  }, [me?.hasCredentials, token, bestTime]);
+
   const saveCreds = async (e) => {
     e.preventDefault();
     setSavingCreds(true);
@@ -141,10 +162,12 @@ export default function Dashboard() {
     const topicToGenerate = post; // Use text area content as the topic/prompt if generating
     if (!topicToGenerate.trim()) return;
     setLoading(true);
-    setPostId(null); setStatus(null);
+    setPostId(null); setStatus(null); setBestTime(null);
     try {
       const data = await api.generate(topicToGenerate, token);
+      console.log("DATA FROM BACKEND", data);
       setPost(data.post);
+      setBestTime(data.bestTime);
       setPostId(data.postId);
       setCharCount(data.post.length);
       loadMe();
@@ -406,6 +429,72 @@ export default function Dashboard() {
                 <span>Published</span>
                 <strong>{postedCount}</strong>
               </div>
+            </div>
+          </div>
+
+          <div className="li-profile-card" style={{ marginTop: 16 }}>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid #e0dfdc" }}>
+              <div style={{ fontSize: 13, fontWeight: "600", color: "rgba(0,0,0,0.9)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>Real-Time Peak Timing</span>
+                <span style={{ fontSize: "16px" }}>🔥</span>
+              </div>
+            </div>
+            <div style={{ padding: "12px 16px" }}>
+               {fetchingBestTime ? (
+                 <div style={{ fontSize: 12, color: "rgba(0,0,0,0.6)", lineHeight: "1.5" }}>
+                    <span style={{ display: "block", marginBottom: 4 }}>Connecting to Real-time API...</span>
+                    <div style={{ background: "#e0dfdc", height: 8, borderRadius: 4, width: "100%", marginBottom: 4, animation: "pulse 1.5s infinite" }}></div>
+                    <div style={{ background: "#e0dfdc", height: 8, borderRadius: 4, width: "80%", marginBottom: 4, animation: "pulse 1.5s 0.2s infinite" }}></div>
+                    <div style={{ background: "#e0dfdc", height: 8, borderRadius: 4, width: "60%", animation: "pulse 1.5s 0.4s infinite" }}></div>
+                 </div>
+               ) : bestTime ? (
+                 <div style={{ fontSize: 12, color: "rgba(0,0,0,0.9)", lineHeight: "1.6" }}>
+                   <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                     {bestTime.split("\n").filter(line => line.trim().length > 0 && line.includes("|")).map((line, i, arr) => {
+                       let cleanText = line.replace(/^-\s*/, "").replace(/^\*\s*/, "").replace(/^\d+\.\s*/, "").trim();
+                       let [dayTimeStr, detailStr] = cleanText.split("|");
+                       if (dayTimeStr && detailStr) {
+                          let parts = dayTimeStr.split(":");
+                          let day = parts[0].trim();
+                          let rest = parts.slice(1).join(":").trim();
+                          let isHigh = detailStr.toLowerCase().includes("high") || detailStr.toLowerCase().includes("peak") || detailStr.toLowerCase().includes("spike");
+                          let isExpanded = expandedDay === i;
+                          return (
+                            <li key={i} style={{ borderBottom: i !== arr.length - 1 ? "1px solid #f3f2ef" : "none" }}>
+                              <div 
+                                onClick={() => setExpandedDay(isExpanded ? null : i)}
+                                style={{ padding: "8px 0", display: "flex", alignItems: "flex-start", cursor: "pointer", userSelect: "none" }}
+                              >
+                                <strong style={{ color: isHigh ? "#d97706" : "rgba(0,0,0,0.9)", minWidth: "40px", display: "inline-block" }}>{day}:</strong>
+                                <span style={{ color: isHigh ? "#b45309" : "rgba(0,0,0,0.7)", marginLeft: 6, flex: 1 }}>
+                                  {rest} {isHigh ? " 🔥" : ""}
+                                </span>
+                                <span style={{ marginLeft: "auto", fontSize: "10px", color: "#ccc", transform: isExpanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▼</span>
+                              </div>
+                              {isExpanded && (
+                                <div style={{ padding: "0 8px 12px 46px", fontSize: "11px", color: "rgba(0,0,0,0.6)", lineHeight: "1.4" }}>
+                                  {detailStr.trim()}
+                                </div>
+                              )}
+                            </li>
+                          );
+                       }
+                       return null;
+                     })}
+                   </ul>
+                 </div>
+               ) : (
+                 <div style={{ fontSize: 12, color: "rgba(0,0,0,0.6)", lineHeight: "1.5" }}>
+                   <ul style={{ paddingLeft: 16, margin: "0 0 10px 0", color: "rgba(0,0,0,0.7)", lineHeight: "1.6" }}>
+                     <li><strong>Mon:</strong> Afternoons / Low</li>
+                     <li><strong style={{ color: "#d97706" }}>Tue: 10:00 AM - 11:00 AM 🔥</strong></li>
+                     <li><strong style={{ color: "#d97706" }}>Wed: 10:00 AM - 12:00 PM 🔥</strong></li>
+                     <li><strong style={{ color: "#d97706" }}>Thu: 10:00 AM - 1:00 PM 🔥</strong></li>
+                     <li><strong>Fri:</strong> Variable</li>
+                     <li><strong>Sat-Sun:</strong> Lowest / Ineffective</li>
+                   </ul>
+                 </div>
+               )}
             </div>
           </div>
         </aside>

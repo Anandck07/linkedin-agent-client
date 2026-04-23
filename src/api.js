@@ -1,4 +1,4 @@
-const BASE = "https://linkedin-agent-server.onrender.com/api";
+const BASE = "http://localhost:5000/api";
 
 const headers = (token, isForm = false) => ({
   ...(!isForm && { "Content-Type": "application/json" }),
@@ -40,6 +40,7 @@ export const api = {
   verifyPayment: (body, token) => req("POST", "/billing/verify", body, token),
   cancelSubscription: (token) => req("POST", "/billing/cancel", {}, token),
   getMe: (token) => req("GET", "/dashboard/me", null, token),
+  getBestTime: (industry, token) => req("GET", `/dashboard/best-time?industry=${encodeURIComponent(industry)}`, null, token),
   saveCredentials: (body, token) => req("POST", "/dashboard/credentials", body, token),
   generate: (topic, token) => req("POST", "/dashboard/generate", { topic }, token),
   generateFromPromptForSchedule: (prompt, token) => req("POST", "/dashboard/schedule/generate-from-prompt", { prompt }, token),
