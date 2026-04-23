@@ -7,25 +7,26 @@ const headers = (token, isForm = false) => ({
 
 const req = async (method, path, body, token, isForm = false) => {
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 35000); // 35s for Render cold start
     const res = await fetch(`${BASE}${path}`, {
       method,
       headers: headers(token, isForm),
-      body: body ? (isForm ? body : JSON.stringify(body)) : undefined
+      body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+      signal: controller.signal
     });
+    clearTimeout(timeout);
 
     const isJson = res.headers.get("content-type")?.includes("application/json");
     const data = isJson ? await res.json() : { error: await res.text() };
 
-    if (!res.ok) {
-      throw new Error(data.error || `Request failed with status ${res.status}`);
-    }
-
+    if (!res.ok) throw new Error(data.error || `Request failed with status ${res.status}`);
     if (data?.error) throw new Error(data.error);
     return data;
   } catch (err) {
-    if (err instanceof TypeError && /fetch/i.test(err.message)) {
+    if (err.name === "AbortError") throw new Error("Server is waking up, please try again in a moment.");
+    if (err instanceof TypeError && /fetch/i.test(err.message))
       throw new Error("Cannot reach server. Please try again.");
-    }
     throw err;
   }
 };
