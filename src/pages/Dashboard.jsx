@@ -342,7 +342,7 @@ export default function Dashboard() {
     }
   };
 
-  const toUTC = (localStr) => { if (!localStr) return null; const offsetMs = new Date().getTimezoneOffset() * 60000; return new Date(new Date(localStr).getTime() + offsetMs).toISOString(); };
+  const toUTC = (localStr) => { if (!localStr) return null; return new Date(localStr).toISOString(); };
 
   const totalPosts     = me?.posts?.length ?? 0;
   const postedCount    = me?.posts?.filter(p => p.postedToLinkedIn).length ?? 0;
@@ -1250,4 +1250,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
