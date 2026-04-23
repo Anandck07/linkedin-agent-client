@@ -345,10 +345,10 @@ export default function Dashboard() {
   // Convert datetime-local value to proper UTC ISO string accounting for local timezone
   const toUTC = (localDateTimeStr) => {
     if (!localDateTimeStr) return null;
-    // datetime-local gives "YYYY-MM-DDTHH:mm" in local time
-    // new Date() parses it as local time correctly
     return new Date(localDateTimeStr).toISOString();
   };
+
+  const totalPosts     = me?.posts?.length ?? 0;
   const postedCount    = me?.posts?.filter(p => p.postedToLinkedIn).length ?? 0;
   const scheduledCount = me?.posts?.filter(p => ["scheduled","retrying"].includes(p.scheduleStatus)).length ?? 0;
   const draftCount     = totalPosts - postedCount - scheduledCount;
