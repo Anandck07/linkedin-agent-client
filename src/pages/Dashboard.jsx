@@ -342,13 +342,12 @@ export default function Dashboard() {
     }
   };
 
-  // Convert datetime-local string to UTC ISO — handles IST and any local timezone
+  // Send datetime-local string directly - server will parse as IST
   const toUTC = (localStr) => {
     if (!localStr) return null;
-    // datetime-local gives "YYYY-MM-DDTHH:mm" without timezone
-    // Append timezone offset so server gets correct UTC time
-    const offsetMs = new Date().getTimezoneOffset() * 60000;
-    return new Date(new Date(localStr).getTime() - offsetMs).toISOString();
+    // Manually build ISO string with IST offset (+05:30)
+    // datetime-local gives "YYYY-MM-DDTHH:mm"
+    return localStr + ":00+05:30";
   };
 
   const totalPosts     = me?.posts?.length ?? 0;
