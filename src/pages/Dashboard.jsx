@@ -342,12 +342,9 @@ export default function Dashboard() {
     }
   };
 
-  // Send datetime-local string directly - server will parse as IST
   const toUTC = (localStr) => {
     if (!localStr) return null;
-    // Manually build ISO string with IST offset (+05:30)
-    // datetime-local gives "YYYY-MM-DDTHH:mm"
-    return localStr + ":00+05:30";
+    return new Date(localStr).toISOString();
   };
 
   const totalPosts     = me?.posts?.length ?? 0;
