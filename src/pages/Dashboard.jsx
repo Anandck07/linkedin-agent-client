@@ -138,11 +138,12 @@ export default function Dashboard() {
   };
 
   const generate = async () => {
-    if (!topic.trim()) return;
+    const topicToGenerate = post; // Use text area content as the topic/prompt if generating
+    if (!topicToGenerate.trim()) return;
     setLoading(true);
-    setPost(""); setPostId(null); setStatus(null);
+    setPostId(null); setStatus(null);
     try {
-      const data = await api.generate(topic, token);
+      const data = await api.generate(topicToGenerate, token);
       setPost(data.post);
       setPostId(data.postId);
       setCharCount(data.post.length);
@@ -348,89 +349,81 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="dashboard">
-      {/* ── Sidebar ── */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">🤖</div>
-            LinkedIn AI
-          </div>
-          <div className="sidebar-user">
-            <div className="sidebar-avatar">{initials}</div>
-            <div className="sidebar-user-info">
-              <div className="sidebar-user-name">{user?.name}</div>
-              <div className="sidebar-user-email">{user?.email}</div>
+    <div className="li-layout">
+      {/* ── Global Top Navbar ── */}
+      <nav className="li-global-nav">
+        <div className="li-nav-content">
+          <div className="li-nav-left">
+            <div className="li-logo">
+              <span className="li-logo-icon">in</span>
+              <span className="li-logo-text">LinkedIn Agent</span>
+            </div>
+            <div className="li-search">
+              <span className="li-search-icon">🔍</span>
+              <input type="text" placeholder="Search" />
             </div>
           </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          {NAV.map(({ id, icon, label }) => (
-            <button
-              key={id}
-              className={`nav-btn ${tab === id ? "active" : ""}`}
-              onClick={() => setTab(id)}
-            >
-              <span className="nav-btn-icon">{icon}</span>
-              {label}
-              {id === "history" && totalPosts > 0 && (
-                <span className="badge badge-blue" style={{ marginLeft: "auto", fontSize: 10 }}>{totalPosts}</span>
-              )}
-              {id === "schedule" && scheduledCount > 0 && (
-                <span className="badge badge-orange" style={{ marginLeft: "auto", fontSize: 10 }}>{scheduledCount}</span>
-              )}
-              {id === "settings" && !me?.hasCredentials && (
-                <span style={{ marginLeft: "auto", color: "#f59e0b", fontSize: 14 }}>●</span>
-              )}
+          <div className="li-nav-links">
+            {NAV.map(({ id, icon, label }) => (
+              <button
+                key={id}
+                className={`li-nav-item ${tab === id ? "active" : ""}`}
+                onClick={() => setTab(id)}
+              >
+                <span className="li-nav-icon">{icon}</span>
+                <span className="li-nav-label">{label}</span>
+                {id === "history" && totalPosts > 0 && <span className="li-nav-badge blue">{totalPosts}</span>}
+                {id === "schedule" && scheduledCount > 0 && <span className="li-nav-badge orange">{scheduledCount}</span>}
+                {id === "settings" && !me?.hasCredentials && <span className="li-nav-dot"></span>}
+              </button>
+            ))}
+            <div className="li-nav-divider"></div>
+            <button className="li-nav-item" onClick={() => { logout(); navigate("/"); }}>
+              <div className="li-nav-avatar">{initials}</div>
+              <span className="li-nav-label">Me ▼</span>
             </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-footer">
-          <button className="btn btn-danger btn-full btn-sm" onClick={() => { logout(); navigate("/"); }}>
-            ↩ Sign Out
-          </button>
-        </div>
-      </aside>
-
-      {/* ── Main ── */}
-      <main className="main">
-        {/* Status Alert */}
-        {status && (
-          <div className={`alert alert-${status.type}`}>
-            {status.msg}
-            <button onClick={() => setStatus(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "inherit" }}>✕</button>
           </div>
-        )}
+        </div>
+      </nav>
+
+      {/* ── Main Container (3-column) ── */}
+      <div className="li-main-container">
+        {/* Left Column */}
+        <aside className="li-left-sidebar">
+          <div className="li-profile-card">
+            <div className="li-profile-bg"></div>
+            <div className="li-profile-info">
+              <div className="li-profile-avatar-lg">{initials}</div>
+              <div className="li-profile-name">{user?.name}</div>
+              <div className="li-profile-headline">{me?.plan === "pro" ? "Pro Member • LinkedIn AI Agent" : "LinkedIn AI Agent User"}</div>
+            </div>
+            <div className="li-profile-stats">
+              <div className="li-stat-row">
+                <span>Posts Generated</span>
+                <strong>{totalPosts}</strong>
+              </div>
+              <div className="li-stat-row" onClick={() => setTab("history")} style={{ cursor: "pointer" }}>
+                <span>Published</span>
+                <strong>{postedCount}</strong>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Center Column */}
+        <main className="li-feed">
+          {/* Status Alert */}
+          {status && (
+            <div className={`alert alert-${status.type}`}>
+              {status.msg}
+              <button onClick={() => setStatus(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "inherit" }}>✕</button>
+            </div>
+          )}
 
         {/* ── Generate Tab ── */}
         {tab === "generate" && (
           <div className="fade-in">
-            <div className="page-header">
-              <div className="page-title">✨ Generate Post</div>
-              <div className="page-sub">AI agents will craft a viral LinkedIn post for you</div>
-            </div>
-
-            {/* Stats */}
-            <div className="stats-row">
-              <div className="stat-card">
-                <div className="stat-icon stat-icon-blue">📝</div>
-                <div><div className="stat-value">{totalPosts}</div><div className="stat-label">Total Posts</div></div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon stat-icon-green">🚀</div>
-                <div><div className="stat-value">{postedCount}</div><div className="stat-label">Published</div></div>
-              </div>
-              <div className="stat-card" style={{ cursor: "pointer" }} onClick={() => setTab("schedule")}>
-                <div className="stat-icon stat-icon-orange">⏰</div>
-                <div><div className="stat-value">{scheduledCount}</div><div className="stat-label">Scheduled</div></div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon stat-icon-purple">📄</div>
-                <div><div className="stat-value">{draftCount}</div><div className="stat-label">Drafts</div></div>
-              </div>
-            </div>
+            {/* Page Header omitted to match LinkedIn's simpler feed */}
 
             {!me?.hasCredentials && (
               <div className="alert alert-warning">
@@ -442,50 +435,20 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div className="card">
-              <div className="card-title">What do you want to post about?</div>
-              <div className="card-sub">Enter a topic and our AI agents will do the rest</div>
-
-              <div className="generate-input-row">
-                <input
-                  className="form-input form-input-lg"
-                  placeholder="e.g. My MERN Stack Journey, AI in Healthcare, First Job Experience..."
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && generate()}
-                  disabled={loading}
-                />
-                <button
-                  className="btn btn-primary btn-lg"
-                  onClick={generate}
-                  disabled={loading || !me?.hasCredentials || !topic.trim()}
-                  style={{ minWidth: 160 }}
-                >
-                  {loading ? <><span className="spinner" /> Generating...</> : "✨ Generate"}
-                </button>
-              </div>
-
-              {/* Agent Steps shown while loading */}
-              {loading && (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-                  {["🪝 Hook", "📝 Content", "#️⃣ Hashtags", "⭐ Quality", "✅ Compliance"].map((a, i) => (
-                    <span key={a} className="badge badge-blue" style={{ animation: `pulse 1.5s ${i * 0.2}s infinite` }}>{a}</span>
-                  ))}
-                </div>
-              )}
-
-              {/* Post Output */}
-              {post && (
-                <div className="post-output">
-                  <div className="post-output-header">
-                    <span>📄 Generated Post — edit before publishing</span>
-                    <span style={{ color: charCount > 3000 ? "var(--red)" : "var(--text-light)" }}>
-                      {charCount} chars
+            <div className="generate-split-layout">
+              {/* === CENTER PANE: Editor (acting as 'Start a post') === */}
+              <div className="generate-left-pane">
+                {/* Manually Write / Edit Post with AI Generation */}
+                <div className="card post-editor-card" style={{ marginTop: 0, overflow: 'hidden' }}>
+                  <div className="post-editor-header">
+                    <span style={{ fontWeight: 600, fontSize: 15 }}>📝 Post Editor</span>
+                    <span style={{ color: charCount > 3000 ? "var(--red)" : "var(--text-light)", fontSize: 13 }}>
+                      {charCount} / 3000 chars
                     </span>
                   </div>
 
                   {selectedPost && (
-                    <div style={{ padding: "10px 12px", borderBottom: "1px solid #e2e8f0", background: "#f8fafc", fontSize: 13, color: "var(--text-light)" }}>
+                    <div style={{ padding: "8px 16px", borderBottom: "1px solid #e2e8f0", background: "#f8fafc", fontSize: 12, color: "var(--text-light)" }}>
                       <strong style={{ color: "#0f172a" }}>Status:</strong>{" "}
                       {selectedPost.postedToLinkedIn
                         ? "Published"
@@ -499,70 +462,123 @@ export default function Dashboard() {
                       {selectedPost.scheduledFor && (
                         <span> | <strong style={{ color: "#0f172a" }}>Scheduled For:</strong> {new Date(selectedPost.scheduledFor).toLocaleString()}</span>
                       )}
-                      {typeof selectedPost.scheduleAttempts === "number" && selectedPost.scheduleAttempts > 0 && (
-                        <span> | <strong style={{ color: "#0f172a" }}>Attempts:</strong> {selectedPost.scheduleAttempts}</span>
-                      )}
-                      {selectedPost.lastScheduleError && (
-                        <div style={{ marginTop: 6, color: "var(--red)" }}>
-                          Last Error: {selectedPost.lastScheduleError}
-                        </div>
-                      )}
                     </div>
                   )}
 
-                  <textarea
-                    className="form-input"
-                    value={post}
-                    onChange={(e) => { setPost(e.target.value); setCharCount(e.target.value.length); }}
-                    style={{ borderRadius: 0, border: "none", minHeight: 260 }}
-                  />
+                  <div className="post-editor-body">
+                    {loading && (
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+                        {["🪝 Hook", "📝 Content", "#️⃣ Hashtags", "⭐ Quality", "✅ Compliance"].map((a, i) => (
+                          <span key={a} className="badge badge-blue" style={{ animation: `pulse 1.5s ${i * 0.2}s infinite` }}>{a}</span>
+                        ))}
+                      </div>
+                    )}
 
-                  <div className="post-output-footer">
-                    {/* Image Upload */}
-                    {!preview ? (
-                      <label style={{ cursor: "pointer" }}>
-                        <span className="btn btn-ghost btn-sm">🖼️ Add Image</span>
-                        <input type="file" accept="image/*" onChange={handleImage} style={{ display: "none" }} />
-                      </label>
-                    ) : (
-                      <div className="image-preview-wrap">
+                    <textarea
+                      className="form-input"
+                      placeholder="Write your post here... Or type a topic and click '✨ Generate AI' below to magically write it for you!"
+                      value={post}
+                      onChange={(e) => { setPost(e.target.value); setCharCount(e.target.value.length); }}
+                      style={{ borderRadius: "8px", border: "1px solid var(--border)", minHeight: 220, marginTop: 0 }}
+                    />
+                    
+                    {preview && (
+                      <div className="image-preview-wrap" style={{ marginTop: 12 }}>
                         <img src={preview} alt="preview" className="image-preview" />
                         <button className="image-remove" onClick={() => { setImage(null); setPreview(null); }}>✕</button>
                       </div>
                     )}
+                  </div>
 
-                    <div style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                  <div className="post-editor-footer">
+                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={generate}
+                        disabled={loading || !me?.hasCredentials || !post.trim()}
+                        style={{ background: "linear-gradient(135deg, var(--primary), var(--primary-dark))", border: "none" }}
+                      >
+                        {loading ? <><span className="spinner" /> Generating...</> : "✨ Generate AI"}
+                      </button>
+
+                      <label style={{ cursor: "pointer" }}>
+                        <span className="btn btn-ghost btn-sm">🖼️ {preview ? "Change Image" : "Add Image"}</span>
+                        <input type="file" accept="image/*" onChange={handleImage} style={{ display: "none" }} />
+                      </label>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                       {!me?.linkedinConnected ? (
                         <button className="btn btn-primary btn-sm" onClick={connectLinkedIn}>
                           🔗 Connect LinkedIn
                         </button>
                       ) : (
                         <>
-                          <button className="btn btn-green btn-sm" onClick={publish} disabled={publishing}>
-                            {publishing ? <><span className="spinner" /> Publishing...</> : "🚀 Post to LinkedIn"}
-                          </button>
-                          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                             <input
                               type="datetime-local"
                               className="form-input"
                               value={scheduleAt}
                               onChange={(e) => setScheduleAt(e.target.value)}
-                              style={{ marginTop: 0, width: 220 }}
+                              style={{ width: "170px", padding: "7px 10px", fontSize: "13px", marginTop: 0 }}
                             />
                             <button
-                              className="btn btn-primary btn-sm"
+                              className="btn btn-ghost btn-sm"
                               onClick={schedulePost}
-                              disabled={scheduling || !postId || !scheduleAt}
+                              disabled={scheduling || !postId || !scheduleAt || !post.trim()}
+                              title="Schedule Post"
                             >
-                              {scheduling ? "Scheduling..." : "⏰ Schedule"}
+                              {scheduling ? "..." : "⏰ Schedule"}
                             </button>
                           </div>
+                          <button className="btn btn-green btn-sm" onClick={publish} disabled={publishing || !post.trim()}>
+                            {publishing ? <><span className="spinner" /> Posting...</> : "🚀 Publish Now"}
+                          </button>
                         </>
                       )}
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* === RIGHT PANE: Live Preview === */}
+              <div className="generate-right-pane">
+                <div className="linkedin-post-card">
+                  <div className="lp-header">
+                    <div className="lp-avatar">{initials}</div>
+                    <div className="lp-meta">
+                      <div className="lp-name">{user?.name || "LinkedIn User"}</div>
+                      <div className="lp-headline">{me?.plan === "pro" ? "Pro Member • LinkedIn AI Agent" : "LinkedIn AI Agent User"}</div>
+                      <div className="lp-time">Just now • <span style={{ fontSize: 10 }}>🌐</span></div>
+                    </div>
+                    <div className="lp-options">•••</div>
+                  </div>
+                  <div className="lp-body">
+                    {post ? (
+                      <p>{post}</p>
+                    ) : (
+                      <p style={{ color: "rgba(0,0,0,0.6)", fontSize: "14px", margin: 0 }}>Your post preview will appear here.</p>
+                    )}
+                    
+                    {preview && (
+                        <div className="lp-image-container">
+                          <img src={preview} alt="Post embedded media" />
+                        </div>
+                    )}
+                  </div>
+                  <div className="lp-stats">
+                    <span className="lp-stat-likes">👍❤️ 0</span>
+                    <span className="lp-stat-comments">0 comments • 0 reposts</span>
+                  </div>
+                  <div className="lp-divider" />
+                  <div className="lp-footer">
+                    <button className="lp-action"><span className="lp-icon">👍</span> Like</button>
+                    <button className="lp-action"><span className="lp-icon">💬</span> Comment</button>
+                    <button className="lp-action"><span className="lp-icon">🔁</span> Repost</button>
+                    <button className="lp-action"><span className="lp-icon">✈️</span> Send</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1135,7 +1151,9 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-      </main>
+        {/* ── End of Main ── */}
+        </main>
+      </div>
     </div>
   );
 }
