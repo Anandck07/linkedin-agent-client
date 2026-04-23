@@ -342,10 +342,7 @@ export default function Dashboard() {
     }
   };
 
-  const toUTC = (localStr) => {
-    if (!localStr) return null;
-    return new Date(localStr).toISOString();
-  };
+  const toUTC = (localStr) => { if (!localStr) return null; const offsetMs = new Date().getTimezoneOffset() * 60000; return new Date(new Date(localStr).getTime() + offsetMs).toISOString(); };
 
   const totalPosts     = me?.posts?.length ?? 0;
   const postedCount    = me?.posts?.filter(p => p.postedToLinkedIn).length ?? 0;
@@ -613,6 +610,7 @@ export default function Dashboard() {
                               type="datetime-local"
                               className="form-input"
                               value={scheduleAt}
+                              min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                               onChange={(e) => setScheduleAt(e.target.value)}
                               style={{ width: "170px", padding: "7px 10px", fontSize: "13px", marginTop: 0 }}
                             />
@@ -762,6 +760,7 @@ export default function Dashboard() {
                     type="datetime-local"
                     className="form-input"
                     value={scheduleForm.scheduledFor}
+                    min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                     onChange={(e) => setScheduleForm({ ...scheduleForm, scheduledFor: e.target.value })}
                     required
                   />
@@ -1251,3 +1250,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
