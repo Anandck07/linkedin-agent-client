@@ -210,7 +210,7 @@ export default function Dashboard() {
       const form = new FormData();
       form.append("postId", postId);
       form.append("content", post);
-      form.append("scheduledFor", new Date(scheduleAt).toISOString());
+      form.append("scheduledFor", toUTC(scheduleAt));
       if (image) form.append("image", image);
       await api.schedulePost(form, token);
       setStatus({ type: "success", msg: "⏰ Post scheduled successfully." });
@@ -230,7 +230,7 @@ export default function Dashboard() {
     try {
       const form = new FormData();
       form.append("content", scheduleForm.content);
-      form.append("scheduledFor", new Date(scheduleForm.scheduledFor).toISOString());
+      form.append("scheduledFor", toUTC(scheduleForm.scheduledFor));
       if (scheduleImage) form.append("image", scheduleImage);
       await api.scheduleNewPost(form, token);
       setStatus({ type: "success", msg: `⏰ Post scheduled for ${new Date(scheduleForm.scheduledFor).toLocaleString()}` });
@@ -342,10 +342,13 @@ export default function Dashboard() {
     }
   };
 
-  // Convert datetime-local value to proper UTC ISO string accounting for local timezone
-  const toUTC = (localDateTimeStr) => {
-    if (!localDateTimeStr) return null;
-    return new Date(localDateTimeStr).toISOString();
+  // Convert datetime-local string to UTC ISO — handles IST and any local timezone
+  const toUTC = (localStr) => {
+    if (!localStr) return null;
+    // datetime-local gives "YYYY-MM-DDTHH:mm" without timezone
+    // Append timezone offset so server gets correct UTC time
+    const offsetMs = new Date().getTimezoneOffset() * 60000;
+    return new Date(new Date(localStr).getTime() - offsetMs).toISOString();
   };
 
   const totalPosts     = me?.posts?.length ?? 0;
