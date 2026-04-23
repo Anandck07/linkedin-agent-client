@@ -13,6 +13,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Landing />} />
       <Route path="/auth" element={token ? <Navigate to="/dashboard" /> : <AuthPage />} />
+      <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <AuthPage />} />
+      <Route path="/register" element={token ? <Navigate to="/dashboard" /> : <AuthPage />} />
       <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/" />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
       <Route path="/reset-password" element={<ResetPassword />} />
