@@ -774,7 +774,7 @@ export default function Dashboard() {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={creatingSchedule || !me?.linkedinConnected || !scheduleForm.content.trim() || !scheduleForm.scheduledFor}
+                  disabled={creatingSchedule || !scheduleForm.content.trim() || !scheduleForm.scheduledFor}
                 >
                   {creatingSchedule ? <><span className="spinner" /> Scheduling...</> : "⏰ Schedule Post"}
                 </button>
@@ -1250,6 +1250,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
