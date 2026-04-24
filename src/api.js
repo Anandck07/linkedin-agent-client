@@ -25,7 +25,7 @@ const req = async (method, path, body, token, isForm = false) => {
     return data;
   } catch (err) {
     if (err.name === "AbortError") throw new Error("Server is waking up, please try again in a moment.");
-    if (err instanceof TypeError && /fetch/i.test(err.message))
+    if (err instanceof TypeError && (err.message.includes("fetch") || err.message.includes("Failed to fetch") || err.message.includes("NetworkError")))
       throw new Error("Cannot reach server. Please try again.");
     throw err;
   }
