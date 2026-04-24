@@ -6,7 +6,7 @@ import App from "./App";
 import "./index.css";
 
 // Wake up Render server on app load to avoid cold start delay
-fetch("https://linkedin-agent-server-production.up.railway.app/ping").catch(() => {});
+fetch("https://linkedin-agent-server.onrender.com/ping").catch(() => {});
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
