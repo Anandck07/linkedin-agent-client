@@ -347,7 +347,7 @@ export default function Dashboard() {
     }
   };
 
-  const toUTC = (localStr) => { if (!localStr) return null; return localStr + "+05:30"; };
+  const toUTC = (localStr) => { if (!localStr) return null; return new Date(localStr + "+05:30").toISOString(); };
 
   const totalPosts     = me?.posts?.length ?? 0;
   const postedCount    = me?.posts?.filter(p => p.postedToLinkedIn).length ?? 0;
@@ -1255,6 +1255,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
