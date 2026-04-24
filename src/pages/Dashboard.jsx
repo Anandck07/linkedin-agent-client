@@ -228,11 +228,16 @@ export default function Dashboard() {
     if (!scheduleForm.content.trim() || !scheduleForm.scheduledFor) return;
     setCreatingSchedule(true); setStatus(null);
     try {
-      const form = new FormData();
-      form.append("content", scheduleForm.content);
-      form.append("scheduledFor", toUTC(scheduleForm.scheduledFor));
-      if (scheduleImage) form.append("image", scheduleImage);
-      await api.scheduleNewPost(form, token);
+      const scheduledFor = toUTC(scheduleForm.scheduledFor);
+      if (scheduleImage) {
+        const form = new FormData();
+        form.append("content", scheduleForm.content);
+        form.append("scheduledFor", scheduledFor);
+        form.append("image", scheduleImage);
+        await api.scheduleNewPost(form, token);
+      } else {
+        await api.scheduleNewPostJSON({ content: scheduleForm.content, scheduledFor }, token);
+      }
       setStatus({ type: "success", msg: `⏰ Post scheduled for ${new Date(scheduleForm.scheduledFor).toLocaleString()}` });
       setScheduleForm({ content: "", scheduledFor: "" });
       setScheduleImage(null); setSchedulePreview(null);

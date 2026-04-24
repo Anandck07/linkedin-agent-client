@@ -50,6 +50,7 @@ export const api = {
   publish: (form, token) => req("POST", "/dashboard/publish", form, token, true),
   schedulePost: (form, token) => req("POST", "/dashboard/schedule", form, token, true),
   scheduleNewPost: (form, token) => req("POST", "/dashboard/schedule/new", form, token, true),
+  scheduleNewPostJSON: (body, token) => req("POST", "/dashboard/schedule/new", body, token, false),
   uploadPostImage: (postId, form, token) => req("POST", `/dashboard/posts/${postId}/image`, form, token, true),
   cancelScheduledPost: (postId, token) => req("POST", `/dashboard/schedule/${postId}/cancel`, null, token),
   deletePost: (postId, token) => req("DELETE", `/dashboard/posts/${postId}`, null, token)
