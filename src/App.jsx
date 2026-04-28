@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import LinkedInCallback from "./pages/LinkedInCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
+import AdminPanel from "./pages/AdminPanel";
 import { useAuth } from "./AuthContext";
 
 export default function App() {
@@ -16,9 +17,10 @@ export default function App() {
       <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <AuthPage />} />
       <Route path="/register" element={token ? <Navigate to="/dashboard" /> : <AuthPage />} />
       <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/" />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/admin" element={token ? <AdminPanel /> : <Navigate to="/" />} />
       <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/pricing" element={<Pricing />} />
     </Routes>
   );
 }
