@@ -46,6 +46,7 @@ export default function Dashboard() {
   const [uploadingImageFor, setUploadingImageFor] = useState(null);
   const [plans, setPlans] = useState([]);
   const [billingLoading, setBillingLoading] = useState(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const loadRazorpay = () =>
     new Promise((resolve) => {
@@ -407,11 +408,50 @@ export default function Dashboard() {
                 {id === "settings" && !me?.hasCredentials && <span className="li-nav-dot"></span>}
               </button>
             ))}
-            <div className="li-nav-divider"></div>
-            <button className="li-nav-item" onClick={() => { logout(); navigate("/"); }}>
-              <div className="li-nav-avatar">{initials}</div>
-              <span className="li-nav-label">Me ▼</span>
+            <button
+              className="li-nav-item"
+              onClick={() => navigate("/pricing")}
+              style={{ color: "#0a66c2", fontWeight: 700 }}
+            >
+              <span className="li-nav-icon">⭐</span>
+              <span className="li-nav-label">Upgrade</span>
             </button>
+            {me?.isAdmin && (
+              <button
+                className="li-nav-item"
+                onClick={() => navigate("/admin")}
+              >
+                <span className="li-nav-icon">🛡️</span>
+                <span className="li-nav-label">Admin</span>
+              </button>
+            )}
+            <div className="li-nav-divider"></div>
+            <div style={{ position: "relative" }}>
+              <button 
+                className={`li-nav-item ${showProfileMenu ? "active" : ""}`} 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+              >
+                <div className="li-nav-avatar">{initials}</div>
+                <span className="li-nav-label">Me ▼</span>
+              </button>
+              
+              {showProfileMenu && (
+                <div className="li-profile-dropdown" onClick={(e) => e.stopPropagation()}>
+                  <div className="li-dropdown-header">
+                    <div className="li-profile-avatar-lg" style={{ width: 40, height: 40, fontSize: 16 }}>{initials}</div>
+                    <div style={{ textAlign: "left" }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: "rgba(0,0,0,0.9)" }}>{user?.name}</div>
+                      <div style={{ fontSize: 12, color: "rgba(0,0,0,0.6)" }}>{me?.plan?.charAt(0).toUpperCase() + me?.plan?.slice(1)} Member</div>
+                    </div>
+                  </div>
+                  <div className="li-dropdown-divider"></div>
+                  {me?.isAdmin && (
+                    <button className="li-dropdown-item" onClick={() => navigate("/admin")}>Admin Panel</button>
+                  )}
+                  <button className="li-dropdown-item" style={{ color: "#dc2626" }} onClick={() => { logout(); navigate("/"); }}>Sign Out</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>
@@ -424,8 +464,16 @@ export default function Dashboard() {
             <div className="li-profile-bg"></div>
             <div className="li-profile-info">
               <div className="li-profile-avatar-lg">{initials}</div>
-              <div className="li-profile-name">{user?.name}</div>
-              <div className="li-profile-headline">{me?.plan === "pro" ? "Pro Member • LinkedIn AI Agent" : "LinkedIn AI Agent User"}</div>
+              <div className="li-profile-name">{user?.name || "Loading..."}</div>
+              <div className="li-profile-headline">
+                {!me ? (
+                  <span className="loading-shimmer" style={{ width: 120, height: 14, display: "inline-block", borderRadius: 4 }}></span>
+                ) : (
+                  me.plan === "premium" ? "Premium Member • LinkedIn AI Agent" : 
+                  me.plan === "pro" ? "Pro Member • LinkedIn AI Agent" : 
+                  "Free Plan • LinkedIn AI Agent"
+                )}
+              </div>
             </div>
             <div className="li-profile-stats">
               <div className="li-stat-row">
@@ -447,7 +495,16 @@ export default function Dashboard() {
               </div>
             </div>
             <div style={{ padding: "12px 16px" }}>
-               {fetchingBestTime ? (
+               {!me ? (
+                 <div className="loading-shimmer" style={{ height: 150, borderRadius: 8 }}></div>
+               ) : me.plan === "free" ? (
+                 <div style={{ textAlign: "center", padding: "16px 0" }}>
+                   <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+                   <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(0,0,0,0.9)", marginBottom: 6 }}>Premium Feature</div>
+                   <div style={{ fontSize: 12, color: "rgba(0,0,0,0.6)", marginBottom: 12 }}>Unlock Real-Time Peak Timing to maximize your post engagement.</div>
+                   <button className="btn btn-primary btn-sm" onClick={() => navigate("/pricing")} style={{ borderRadius: 99 }}>Upgrade to Pro</button>
+                 </div>
+               ) : fetchingBestTime ? (
                  <div style={{ fontSize: 12, color: "rgba(0,0,0,0.6)", lineHeight: "1.5" }}>
                     <span style={{ display: "block", marginBottom: 4 }}>Connecting to Real-time API...</span>
                     <div style={{ background: "#e0dfdc", height: 8, borderRadius: 4, width: "100%", marginBottom: 4, animation: "pulse 1.5s infinite" }}></div>
@@ -688,7 +745,25 @@ export default function Dashboard() {
               <div className="page-sub">Write your post, add a photo, pick a date & time — we'll publish it automatically</div>
             </div>
 
-            {!me?.linkedinConnected && (
+            {!me ? (
+              <div className="card" style={{ padding: 40, textAlign: "center" }}>
+                <span className="spinner" style={{ width: 40, height: 40, border: "4px solid #0a66c2", borderTopColor: "transparent" }}></span>
+                <p style={{ marginTop: 12, color: "var(--text-muted)" }}>Loading your schedule...</p>
+              </div>
+            ) : me.plan === "free" ? (
+              <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>Scheduling is a Premium Feature</div>
+                <div style={{ fontSize: 15, color: "var(--text-muted)", marginBottom: 24, maxWidth: 400, margin: "0 auto" }}>
+                  Upgrade to Pro or Premium to schedule your posts in advance and save time.
+                </div>
+                <button className="btn btn-primary" onClick={() => navigate("/pricing")} style={{ borderRadius: 99, padding: "12px 32px", fontSize: 16 }}>
+                  Upgrade to Pro
+                </button>
+              </div>
+            ) : (
+              <>
+                {!me?.linkedinConnected && (
               <div className="alert alert-warning">
                 ⚠️ Connect LinkedIn in{" "}
                 <span onClick={() => setTab("settings")} style={{ fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}>Settings</span>{" "}
@@ -837,6 +912,8 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+              </>
+            )}
           </div>
         )}
 
@@ -867,7 +944,22 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {!me?.posts?.length ? (
+            {!me ? (
+              <div className="card" style={{ padding: 40, textAlign: "center" }}>
+                <div className="loading-shimmer" style={{ height: 300, borderRadius: 12 }}></div>
+              </div>
+            ) : me.plan === "free" ? (
+              <div className="card" style={{ textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>Detailed History is a Pro Feature</div>
+                <div style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 20 }}>
+                  Upgrade to Pro to view, edit, and manage all your past generated posts.
+                </div>
+                <button className="btn btn-primary" onClick={() => navigate("/pricing")} style={{ borderRadius: 99, padding: "10px 24px" }}>
+                  Upgrade to Pro
+                </button>
+              </div>
+            ) : !me?.posts?.length ? (
               <div className="card">
                 <div className="empty-state">
                   <div className="empty-state-icon">📭</div>

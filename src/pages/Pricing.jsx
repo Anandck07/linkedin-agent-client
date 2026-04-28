@@ -13,13 +13,14 @@ const loadRazorpay = () => new Promise((resolve) => {
 });
 
 const FEATURE_LABELS = {
-  free:    ["20 posts/month", "No scheduling", "No Peak Timing", "No AI generation", "No analytics"],
-  pro:     ["200 posts/month", "50 scheduled posts/month", "Peak Timing (30/month)", "AI content generation", "Basic analytics"],
+  free:    ["20 posts/month", "No scheduling", "No Peak Timing", "AI content generation", "Basic analytics"],
+  pro:     ["200 posts/month", "50 scheduled posts/month", "Peak Timing (30/month)", "AI content generation", "Advanced analytics"],
   premium: ["Unlimited posts", "Unlimited scheduling", "Unlimited Peak Timing", "AI content generation", "Advanced analytics"],
 };
 
 export default function Pricing() {
   const [plans, setPlans] = useState([]);
+  const [currentPlan, setCurrentPlan] = useState("free");
   const [billing, setBilling] = useState("monthly");
   const [coupon, setCoupon] = useState("");
   const [couponResult, setCouponResult] = useState(null);
@@ -31,7 +32,12 @@ export default function Pricing() {
 
   useEffect(() => {
     api.getPlans().then(d => setPlans(d.plans)).catch(() => {});
-  }, []);
+    if (token) {
+      api.getMe(token).then(me => {
+        if (me?.plan) setCurrentPlan(me.plan);
+      }).catch(() => {});
+    }
+  }, [token]);
 
   const applyCoupon = async (planId) => {
     if (!coupon.trim()) return;
@@ -139,6 +145,7 @@ export default function Pricing() {
             const discounted = couponResult?.planId === plan.id && price < original;
             const isPremium = plan.id === "premium";
             const isPro = plan.id === "pro";
+            const isCurrentPlan = currentPlan === plan.id;
 
             return (
               <div key={plan.id} style={{
@@ -174,17 +181,17 @@ export default function Pricing() {
 
                 <button
                   onClick={() => handleSubscribe(plan)}
-                  disabled={plan.id === "free" || loading === plan.id}
+                  disabled={isCurrentPlan || loading === plan.id}
                   style={{
                     width: "100%", padding: "13px", borderRadius: 10, border: "none",
-                    fontWeight: 700, fontSize: 15, cursor: plan.id === "free" ? "default" : "pointer",
-                    background: isPremium ? "#fff" : plan.id === "free" ? "var(--bg)" : "var(--primary)",
-                    color: isPremium ? "var(--primary)" : plan.id === "free" ? "var(--text-muted)" : "#fff",
-                    opacity: plan.id === "free" ? 0.7 : 1, fontFamily: "var(--font)",
+                    fontWeight: 700, fontSize: 15, cursor: isCurrentPlan ? "default" : "pointer",
+                    background: isPremium ? (isCurrentPlan ? "#e0e0e0" : "#fff") : isCurrentPlan ? "var(--bg)" : "var(--primary)",
+                    color: isPremium ? (isCurrentPlan ? "var(--text-muted)" : "var(--primary)") : isCurrentPlan ? "var(--text-muted)" : "#fff",
+                    opacity: isCurrentPlan ? 0.7 : 1, fontFamily: "var(--font)",
                     transition: "all 0.2s"
                   }}
                 >
-                  {loading === plan.id ? "Opening..." : plan.id === "free" ? "Current Plan" : `Subscribe to ${plan.name} →`}
+                  {loading === plan.id ? "Opening..." : isCurrentPlan ? "Current Plan" : `Subscribe to ${plan.name} →`}
                 </button>
               </div>
             );
