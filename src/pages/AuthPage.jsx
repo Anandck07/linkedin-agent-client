@@ -129,7 +129,12 @@ export default function AuthPage() {
       setRegSeconds(data.resendAfterSec || 60);
       setRegInfo("OTP sent to your email. Check your inbox and enter the code below.");
     } catch (err) {
-      setRegError(err.message || "Could not send OTP.");
+      const msg = err.message || "Could not send OTP.";
+      if (msg.toLowerCase().includes("already registered")) {
+        setRegError(msg + " Click 'Sign in' below.");
+      } else {
+        setRegError(msg);
+      }
     } finally {
       setRegOtpLoading(false);
     }
