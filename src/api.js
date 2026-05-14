@@ -48,6 +48,10 @@ const req = async (method, path, body, token, isForm = false, retry = true) => {
 export const api = {
   register: (body) => req("POST", "/auth/register", body),
   login: (body) => req("POST", "/auth/login", body),
+  sendOtp: (email) => req("POST", "/auth/send-otp", { email }),
+  verifyOtp: (email, otp) => req("POST", "/auth/verify-otp", { email, otp }),
+  sendLoginOtp: (email) => req("POST", "/auth/send-login-otp", { email }),
+  loginWithOtp: (email, otp) => req("POST", "/auth/login-with-otp", { email, otp }),
   forgotPassword: (email) => req("POST", "/auth/forgot-password", { email }),
   resetPassword: (token, password) => req("POST", "/auth/reset-password", { token, password }),
   getPlans: () => req("GET", "/subscription/plans"),
